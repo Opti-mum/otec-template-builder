@@ -1,0 +1,7 @@
+# PHI / raw clinic data - never commit
+*.xls
+*.xlsx
+*.pkl
+*.pickle
+*.csv
+raw/

@@ -1,0 +1,1128 @@
+<title>Dr. Dang Template Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky header with variant tabs; left rail of controls, right the 5-minute grid (stacks on phone). */
+:root{
+  --bg:#f5f7f8; --panel:#ffffff; --ink:#15212b; --muted:#5b6b78; --line:#dce3e8; --soft:#eef2f5;
+  --accent:#1d5c8f; --accent-ink:#ffffff; --accent-soft:#e3eef7;
+  --ok:#1e7a4c; --ok-bg:#e2f3ea; --warn:#9a6200; --warn-bg:#fbf0d9; --bad:#b3261e; --bad-bg:#fbe4e2;
+  --c-r:#1d5c8f; --c-r-bg:#dceaf6;
+  --c-c:#6a3fa0; --c-c-bg:#ece3f7;
+  --c-a:#2f6b5a; --c-a-bg:#ddefe8;
+  --c-po:#8a5a00; --c-po-bg:#f8ecd2;
+  --c-u:#b3261e; --c-u-bg:#fadedb;
+  --c-o:#5b6b78; --c-o-bg:transparent;
+  --c-L:#0f7480; --c-L-bg:#d7f0f2;
+  --c-l:#5e6b12; --c-l-bg:#edf1d4;
+  --c-P:#a1366b; --c-P-bg:#f7deea;
+  --lunch:#eef2f5; --s1:#1d5c8f; --s2:#c26a0a;
+  --font-ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f161c; --panel:#162029; --ink:#e6edf2; --muted:#93a4b1; --line:#283641; --soft:#1c2832;
+  --accent:#6fb0e6; --accent-ink:#0b1620; --accent-soft:#1b3347;
+  --ok:#6fd3a0; --ok-bg:#163428; --warn:#f0c062; --warn-bg:#3a2e12; --bad:#ff8f86; --bad-bg:#3d1c1a;
+  --c-r:#8cc3f0; --c-r-bg:#1c3448; --c-c:#c7a6f0; --c-c-bg:#2e2342; --c-a:#86d1b8; --c-a-bg:#1a3530;
+  --c-po:#f0c062; --c-po-bg:#3a2e12; --c-u:#ff8f86; --c-u-bg:#3d1c1a; --c-o:#93a4b1;
+  --c-L:#7fd6df; --c-L-bg:#163a3e; --c-l:#c9d67a; --c-l-bg:#2f3414; --c-P:#f0a0c6; --c-P-bg:#3c1f2e;
+  --lunch:#1a242d; --s1:#4f95cf; --s2:#d07f24; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161c; --panel:#162029; --ink:#e6edf2; --muted:#93a4b1; --line:#283641; --soft:#1c2832;
+  --accent:#6fb0e6; --accent-ink:#0b1620; --accent-soft:#1b3347;
+  --ok:#6fd3a0; --ok-bg:#163428; --warn:#f0c062; --warn-bg:#3a2e12; --bad:#ff8f86; --bad-bg:#3d1c1a;
+  --c-r:#8cc3f0; --c-r-bg:#1c3448; --c-c:#c7a6f0; --c-c-bg:#2e2342; --c-a:#86d1b8; --c-a-bg:#1a3530;
+  --c-po:#f0c062; --c-po-bg:#3a2e12; --c-u:#ff8f86; --c-u-bg:#3d1c1a; --c-o:#93a4b1;
+  --c-L:#7fd6df; --c-L-bg:#163a3e; --c-l:#c9d67a; --c-l-bg:#2f3414; --c-P:#f0a0c6; --c-P-bg:#3c1f2e;
+  --lunch:#1a242d; --s1:#4f95cf; --s2:#d07f24; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:14px;line-height:1.45}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px 48px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:1280px;margin:0 auto;padding:14px 16px 0;display:flex;flex-direction:column;gap:10px}
+.title-row{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px}
+h1{font-size:20px;font-weight:700;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.pipeline{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.pipeline b{color:var(--ink);font-weight:600}
+.pipeline .arr{opacity:.6}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tab{appearance:none;border:0;background:none;color:var(--muted);font:inherit;font-weight:600;padding:9px 14px 11px;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.layout{display:grid;grid-template-columns:316px minmax(0,1fr);gap:20px;padding-top:18px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.rail{display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.panel h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
+.when{font-size:13px;color:var(--muted);margin:-2px 0 12px}
+.cap{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.cap-top{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
+.cap-top .big{font-size:22px;font-weight:700}
+.cap-top .of{color:var(--muted)}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--soft)}
+.bar span{display:block;height:100%}
+.status{font-size:12.5px;font-weight:600;padding:3px 8px;border-radius:999px;display:inline-block}
+.st-ok{color:var(--ok);background:var(--ok-bg)} .st-warn{color:var(--warn);background:var(--warn-bg)} .st-bad{color:var(--bad);background:var(--bad-bg)}
+.mix{display:flex;flex-direction:column;gap:4px}
+.mrow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:4px 0}
+.mrow .lbl{font-size:13.5px}
+.mrow .lbl small{display:block;color:var(--muted);font-size:12px}
+.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.step button{appearance:none;border:0;background:var(--soft);color:var(--ink);width:30px;height:30px;font-size:16px;cursor:pointer}
+.step button:hover{background:var(--accent-soft)}
+.step input{width:42px;height:30px;border:0;text-align:center;font:600 14px var(--font-mono);background:var(--panel);color:var(--ink);font-variant-numeric:tabular-nums}
+.step input::-webkit-inner-spin-button{appearance:none;margin:0}
+.chip{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;padding:0 6px;border-radius:6px;font:600 12.5px var(--font-mono);color:var(--cc);background:var(--cb);border:1px solid transparent}
+.chip.k-o{border:1px dashed var(--c-o)}
+.k-r{--cc:var(--c-r);--cb:var(--c-r-bg)} .k-c{--cc:var(--c-c);--cb:var(--c-c-bg)} .k-a{--cc:var(--c-a);--cb:var(--c-a-bg)}
+.k-po{--cc:var(--c-po);--cb:var(--c-po-bg)} .k-u{--cc:var(--c-u);--cb:var(--c-u-bg)} .k-o{--cc:var(--c-o);--cb:var(--c-o-bg)}
+.k-L{--cc:var(--c-L);--cb:var(--c-L-bg)} .k-l{--cc:var(--c-l);--cb:var(--c-l-bg)} .k-P{--cc:var(--c-P);--cb:var(--c-P-bg)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 13px var(--font-ui);padding:7px 12px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{opacity:.9;color:var(--accent-ink)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12px;color:var(--muted)}
+.field input[type=time],.field input[type=number]{font:500 14px var(--font-mono);padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);width:100%}
+.derived{grid-column:1/-1;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.derived b{color:var(--ink)}
+.toggles{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.tog{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;user-select:none}
+.tog input{accent-color:var(--accent);margin:0}
+.check{grid-column:1/-1;display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-top:4px}
+.check input{accent-color:var(--accent);margin-top:3px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.need th,.need td{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line);font-size:13px}
+.need th:first-child,.need td:first-child{text-align:left}
+.need th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.need input{width:52px;font:500 13px var(--font-mono);text-align:right;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.note{font-size:12px;color:var(--muted);margin:10px 0 0}
+.main{min-width:0;display:flex;flex-direction:column;gap:12px}
+.main-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend .chip{min-width:26px;height:20px;font-size:11.5px}
+.gridbox{min-width:0}
+.gridcols{display:flex;gap:10px;align-items:flex-start}
+.grid{flex:1 1 0;min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);border-collapse:separate;border-spacing:0;overflow:hidden}
+.gridtotals{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;margin-top:8px;font:500 12.5px var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.gridtotals b{color:var(--ink);font-weight:600}
+.grid th{background:var(--soft);font-size:11px;font-weight:600;text-align:center;padding:5px 2px;border-bottom:1px solid var(--line)}
+.grid th small{display:block;font-weight:500;color:var(--muted);font-family:var(--font-mono);font-size:10px;line-height:1.1}
+.grid td{padding:1px 2px;height:23px;text-align:center;border-bottom:1px solid var(--soft)}
+.grid td.t{font:500 11px var(--font-mono);color:var(--muted);text-align:right;padding-right:6px;width:52px}
+.grid tr.hour td{border-top:1px solid var(--line)}
+.grid tr.hour td.t{color:var(--ink);font-weight:600}
+.grid tr.lunch td{background:var(--lunch)}
+.grid tr.lunch td.t{color:var(--muted)}
+.lunchlbl{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.nd{appearance:none;border:0;background:none;padding:0;cursor:pointer}
+.nd .chip{min-width:40px}
+.nd:hover .chip{outline:2px solid var(--accent);outline-offset:1px}
+.nd.empty .chip{color:var(--muted);background:none;border:1px dashed var(--line)}
+.nd.edited .chip{box-shadow:inset 0 -3px 0 currentColor}
+.od .chip{opacity:.8;min-width:26px;height:19px;padding:0 3px;font-size:11.5px}
+td.offd{background:repeating-linear-gradient(135deg,transparent 0 6px,var(--soft) 6px 8px)}
+.totals td{font:600 12.5px var(--font-mono);color:var(--ink);border-top:2px solid var(--line);background:var(--soft);position:sticky;bottom:0}
+.cmp th,.cmp td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;font-size:13.5px}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp thead th{font-size:12px;color:var(--muted);font-weight:600}
+.cmp tbody th{font-weight:600}
+.cmp tr.sum td,.cmp tr.sum th{font-weight:700;border-top:2px solid var(--line)}
+.scroll{overflow-x:auto}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+textarea.fallback{width:100%;height:120px;font:12px var(--font-mono);margin-top:8px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px}
+.hint{font-size:12.5px;color:var(--muted)}
+
+.findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.find{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.find .num{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.find .num small{font-size:13px;font-weight:500;color:var(--muted)}
+.find p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.chartwrap{position:relative}
+.chart svg{display:block;width:100%;height:auto}
+.chart .gridl{stroke:var(--line);stroke-width:1}
+.chart .axis{fill:var(--muted);font:11px var(--font-mono)}
+.chart .lab{font:600 12px var(--font-ui);fill:var(--ink)}
+.chart .hit{fill:transparent;cursor:crosshair}
+.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;box-shadow:0 4px 14px rgba(0,0,0,.12);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tip .sw{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.keyrow{display:flex;gap:16px;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.keyrow span{display:inline-flex;align-items:center;gap:6px}
+.keyrow i{display:inline-block;width:14px;height:3px;border-radius:2px}
+.mt th,.mt td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;font-size:13px;white-space:nowrap}
+.mt th:first-child,.mt td:first-child{text-align:left}
+.mt thead th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.mt td.hi{font-weight:700}
+.vtag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.btn.sm{padding:4px 9px;font-size:12px}
+.caveats{font-size:13px;color:var(--muted);margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.slot{display:inline-flex;align-items:center;gap:2px}
+.grip{width:15px;height:21px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-size:15px;line-height:1;border-radius:5px}
+.grip:hover{background:var(--soft);color:var(--ink)}
+.grip.dim{opacity:.45}
+.pickwrap{position:relative;display:inline-flex}
+.pickwrap .chip{min-width:34px;height:20px;padding:0 4px;font-size:12px}
+.pickwrap select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font:inherit;color:var(--ink);background:var(--panel)}
+.pickwrap:hover .chip,.pickwrap:focus-within .chip{outline:2px solid var(--accent);outline-offset:1px}
+.pickwrap.empty .chip{color:var(--muted);background:none;border:1px dashed var(--line)}
+.pickwrap.edited .chip{box-shadow:inset 0 -3px 0 currentColor}
+td.drop{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+td.dragsrc .pickwrap .chip{opacity:.35}
+.ghost{position:fixed;left:0;top:0;z-index:60;pointer-events:none;display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:8px;background:var(--panel);border:1px solid var(--accent);box-shadow:0 6px 18px rgba(0,0,0,.2);font-size:12.5px;white-space:nowrap}
+.palchip{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:6px;padding:2px 4px;margin:-2px -4px}
+.palchip:hover{background:var(--soft);color:var(--ink)}
+body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}
+.sel{font:500 13px var(--font-ui);padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);width:100%}
+.frow{display:flex;flex-direction:column;gap:8px}
+.crow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:3px 0;font-variant-numeric:tabular-nums}
+.crow .n{font:600 13px var(--font-mono)}
+.crow.zero{opacity:.5}
+.fstate{font-size:12.5px;margin:0 0 10px;color:var(--muted)}
+.fstate b{color:var(--ink)}
+.fbands{display:flex;gap:10px;align-items:flex-start}
+.fband{flex:1 1 0;min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+.fhead,.fbody{display:grid;grid-template-columns:44px 1.5fr 1fr 1fr 1fr}
+.fhead div{background:var(--soft);font:600 11px var(--font-ui);text-align:center;padding:5px 2px;border-bottom:1px solid var(--line)}
+.fhead div small{display:block;font:500 10px var(--font-mono);color:var(--muted);line-height:1.1}
+.faxis .tick{height:20px;font:500 11px var(--font-mono);color:var(--muted);text-align:right;padding-right:5px;line-height:20px;font-variant-numeric:tabular-nums}
+.faxis .tick.hr{color:var(--ink);font-weight:600}
+.lane{position:relative;border-left:1px solid var(--soft);background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 19px,var(--soft) 19px,var(--soft) 20px);cursor:cell}
+.lane .lunchband{position:absolute;left:0;right:0;background:repeating-linear-gradient(135deg,transparent 0 5px,var(--soft) 5px 7px);border-top:1px solid var(--line);border-bottom:1px solid var(--line);pointer-events:none}
+.blk{position:absolute;left:2px;right:2px;border-radius:4px;background:var(--cb);color:var(--cc);border:1px solid color-mix(in srgb,var(--cc) 40%,transparent);font:600 11.5px var(--font-mono);display:flex;align-items:center;justify-content:center;gap:4px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;line-height:1}
+.blk small{font:500 10px var(--font-mono);opacity:.85}
+.blk.k-o{border-style:dashed}
+.blk.sel{outline:2px solid var(--accent);z-index:2}
+.blk.partner{outline:2px dashed var(--accent);z-index:1}
+.blk.conf{box-shadow:inset 0 0 0 2px var(--bad)}
+.fprev{position:absolute;left:2px;right:2px;border-radius:4px;background:var(--accent-soft);border:2px dashed var(--accent);pointer-events:none;z-index:3}
+.prow{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:8px;padding:3px 6px;margin:0 -6px;border-radius:8px;cursor:pointer}
+.prow:hover{background:var(--soft)}
+.prow.on{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.prow .nm{font-size:13px}
+.prow input{width:46px;font:500 13px var(--font-mono);text-align:right;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.prow .u{font-size:12px;color:var(--muted)}
+.saved{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.srow.open{border-color:var(--accent);background:var(--accent-soft)}
+.srow b{display:block;overflow-wrap:anywhere}
+.srow small{color:var(--muted);font-size:12px}
+.srow .btns{margin:0;grid-row:1 / span 2;grid-column:2}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.nonec{color:var(--muted);font-size:13px;margin:8px 0}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="title-row">
+      <h1>Dr. Dang Template Builder</h1>
+      <div class="pipeline" aria-label="Patient flow">Testing <span class="arr">→</span> <b>OD</b> +<span id="leadA">20</span> min <span class="arr">→</span> <b>Dr. Dang</b> +<span id="leadB">20</span> min</div>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="layout" id="builder">
+    <aside class="rail">
+      <section class="panel">
+        <h2 id="vname">Variant</h2>
+        <p class="when" id="vwhen"></p>
+        <div class="cap">
+          <div class="cap-top"><span><span class="big" id="capUsed">0</span> <span class="of">of <span id="capTot">0</span> Dr. Dang slots</span></span><span id="capStatus" class="status"></span></div>
+          <div class="bar" id="capBar"></div>
+        </div>
+        <div class="mix" id="mix"></div>
+        <div class="btns">
+          <button class="btn" id="fillA" type="button">Fill gaps with follow-ups</button>
+          <button class="btn" id="resetV" type="button">Reset variant</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Clinic hours</h2>
+        <div class="fields">
+          <div class="field"><label for="amStart">First patient</label><input type="time" step="300" id="amStart"></div>
+          <div class="field"><label for="amEnd">Last morning patient</label><input type="time" step="300" id="amEnd"></div>
+          <div class="field"><label for="pmStart">First afternoon patient</label><input type="time" step="300" id="pmStart"></div>
+          <div class="field"><label for="pmEnd">Last patient</label><input type="time" step="300" id="pmEnd"></div>
+          <div class="field"><label for="lead">OD sees patient before Dr. Dang (min)</label><input type="number" min="5" max="60" step="5" id="lead"></div>
+          <div class="derived" id="derived"></div>
+          <div class="field" style="grid-column:1/-1"><label>Optometrists working</label>
+            <div class="toggles" id="odToggles"></div>
+          </div>
+          <label class="check"><input type="checkbox" id="rTG"> Book all cataract/refractive consults (r) with TG</label>
+        </div>
+        <p class="note">Hours and ODs apply to every variant. Each OD sees one patient every 15 minutes, staggered 5 minutes apart.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Weekly need vs. this variant</h2>
+        <div class="fields" style="margin-bottom:8px">
+          <div class="field"><label for="prac">New consults, whole practice</label><input type="number" min="0" max="200" id="prac"></div>
+          <div class="field"><label for="mi">Seen by Dr. Iizuka</label><input type="number" min="0" max="100" id="mi"></div>
+          <div class="field"><label for="thu">Seen at Dr. Dang's Thursday clinic</label><input type="number" min="0" max="100" id="thu"></div>
+          <div class="field"><label for="raw">CAT R/A booked in r</label><input type="number" min="0" max="40" id="raw"></div>
+          <div class="field"><label for="cpw">Mon/Wed clinics per week</label><input type="number" min="0.5" max="5" step="0.1" id="cpw"></div>
+          <div class="derived" id="ndNeed"></div>
+        </div>
+        <div class="scroll"><table class="need"><thead><tr><th>Type</th><th>Need</th><th>Have</th><th></th></tr></thead><tbody id="needBody"></tbody></table></div>
+        <p class="note">Weekly need defaults to the Feb – Sept 2026 average, when Dr. Iizuka began taking new consults. Clinics per week is 1.5 because holidays and leave cancel some clinics. Use Check fit on the Trends tab to load a specific month.</p>
+      </section>
+    </aside>
+
+    <main class="main">
+      <div class="main-head">
+        <div class="legend" id="legend"></div>
+        <div class="btns" style="margin:0">
+          <button class="btn" id="clearEdits" type="button">Clear grid edits</button>
+          <button class="btn primary" id="copyGrid" type="button">Copy grid for Excel</button>
+        </div>
+      </div>
+      <p class="hint" style="margin:0">Pick a code from the dropdown on any Dr. Dang slot, drag the ⠿ handle to swap two slots, or drag a code from the key above onto a slot. The OD column updates to match, <span id="leadC">20</span> minutes earlier. Edited slots are underlined.</p>
+      <div class="gridbox"><div id="grid"></div></div>
+      <textarea class="fallback" id="fallback" hidden aria-label="Grid as tab-separated text"></textarea>
+    </main>
+  </div>
+
+  <div class="layout" id="free" hidden>
+    <aside class="rail">
+      <section class="panel">
+        <h2>Free build</h2>
+        <p class="when">Every appointment is its own block with its own time and length. Nothing here changes the variants.</p>
+        <p class="fstate" id="fState"></p>
+        <div class="frow">
+          <div class="field"><label for="fSrc">Start from</label><select class="sel" id="fSrc"></select></div>
+          <div class="btns" style="margin:0">
+            <button class="btn" id="fLoad" type="button">Load into grid</button>
+            <button class="btn" id="fClear" type="button">Clear all</button>
+            <button class="btn" id="fUndo" type="button">Undo</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Selected appointment</h2>
+        <p class="hint" id="feHint">Click a block in the grid to edit it.</p>
+        <div class="fields" id="feFields" hidden>
+          <div class="field"><label for="fe-who">Column</label><select class="sel" id="fe-who"></select></div>
+          <div class="field"><label for="fe-code">Type</label><select class="sel" id="fe-code"></select></div>
+          <div class="field"><label for="fe-time">Starts at</label><input type="time" step="300" id="fe-time"></div>
+          <div class="field"><label for="fe-len">Length (min)</label><input type="number" min="5" max="120" step="5" id="fe-len"></div>
+          <div class="derived" id="feInfo"></div>
+          <div class="btns" style="grid-column:1/-1;margin:0">
+            <button class="btn" id="fe-pair" type="button">Add Dr. Dang visit</button>
+            <button class="btn" id="fe-unlink" type="button">Unlink pair</button>
+            <button class="btn" id="fe-del" type="button">Delete</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>New appointments</h2>
+        <p class="hint" style="margin:0 0 8px">Choose a type, then click an empty spot in a column. Or drag a type into a column. Length is the default for new blocks of that type.</p>
+        <div id="fPal"></div>
+        <div class="fields" style="margin-top:10px">
+          <div class="field"><label for="f-lead">Dr. Dang follows the OD by (min)</label><input type="number" min="0" max="120" step="5" id="f-lead"></div>
+          <label class="check" style="margin:0;align-self:end"><input type="checkbox" id="f-auto"> Add the Dr. Dang visit when I place an OD visit</label>
+        </div>
+        <p class="note">Once placed, the OD and Dr. Dang blocks move independently. Laser goes on Dr. Dang only.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Counts</h2>
+        <div class="scroll"><table class="need" id="fCounts"></table></div>
+        <p class="note" id="fWarn"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Hours shown</h2>
+        <div class="fields">
+          <div class="field"><label for="fv-start">From</label><input type="time" step="300" id="fv-start"></div>
+          <div class="field"><label for="fv-end">Last slot</label><input type="time" step="300" id="fv-end"></div>
+          <div class="field"><label for="fv-lunchA">Dr. Dang lunch starts</label><input type="time" step="300" id="fv-lunchA"></div>
+          <div class="field"><label for="fv-lunchB">Dr. Dang lunch ends</label><input type="time" step="300" id="fv-lunchB"></div>
+        </div>
+        <p class="note">Lunch is shaded as a guide and does not block placing anything. The OD lunch shows the same amount earlier.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Saved templates</h2>
+        <div class="field"><label for="fs-name">Template name</label><input class="sel" type="text" id="fs-name" maxlength="60" placeholder="Name this template"></div>
+        <div class="btns"><button class="btn primary" id="fs-new" type="button">Save as new</button><button class="btn" id="fs-save" type="button">Save changes</button></div>
+        <div id="fSaved" class="saved"></div>
+        <div class="btns"><button class="btn sm" id="fs-export" type="button">Copy all as backup text</button><button class="btn sm" id="fs-import-toggle" type="button">Import backup</button></div>
+        <div id="fImportBox" hidden>
+          <textarea class="fallback" id="fImport" aria-label="Paste backup text"></textarea>
+          <div class="btns"><button class="btn sm primary" id="fs-import" type="button">Import</button></div>
+        </div>
+        <textarea class="fallback" id="fExport" hidden aria-label="Backup text"></textarea>
+        <p class="note">Templates are saved in this browser only. Use the backup text to move them to another device.</p>
+      </section>
+    </aside>
+
+    <main class="main">
+      <div class="main-head">
+        <p class="hint" style="margin:0;flex:1;min-width:240px">Drag a block to move it to any 5-minute time. Arrow keys nudge the selected block by 5 minutes, Delete removes it.</p>
+        <div class="btns" style="margin:0">
+          <button class="btn primary" id="fCopy" type="button">Copy grid for Excel</button>
+        </div>
+      </div>
+      <div class="fbands" id="fbands"></div>
+      <textarea class="fallback" id="fFallback" hidden aria-label="Grid as tab-separated text"></textarea>
+    </main>
+  </div>
+
+  <div id="compare" hidden style="padding-top:18px">
+    <section class="panel">
+      <h2>All variants side by side (per clinic)</h2>
+      <div class="scroll"><table class="cmp" id="cmpTable"></table></div>
+      <p class="note">Counts come from each variant's grid, including any slots you edited by hand. "New patients" is r + c minus the cataract reassessments booked in r.</p>
+    </section>
+  </div>
+
+  <div id="trends" hidden style="padding-top:18px;display:flex;flex-direction:column;gap:16px">
+    <div class="findings" id="findings"></div>
+    <section class="panel">
+      <h2>Patients per Mon/Wed clinic, by month</h2>
+      <div class="keyrow"><span><i style="background:var(--s1)"></i>All patients</span><span><i style="background:var(--s2)"></i>New patients</span><span><i style="background:var(--line)"></i>78-slot template</span></div>
+      <div class="chartwrap chart" id="chart"></div>
+    </section>
+    <section class="panel">
+      <h2>Monthly average per clinic and suggested variant</h2>
+      <div class="scroll"><table class="mt" id="monthTable"></table></div>
+      <p class="note">"Check fit" loads that month's demand into the weekly need table and opens the suggested variant.</p>
+    </section>
+    <section class="panel">
+      <h2>How the export was read</h2>
+      <ul class="caveats">
+        <li>Dr. Dang's appointments, Sept 2025 to Sept 2026: 7,790 rows, plus 2,388 for Dr. Iizuka. Monday and Wednesday clinics (93 days) drive the template. Thursdays and surgery days are counted separately.</li>
+        <li>Consults with cataract, RLE, IOLX or refractive terms in the reason are counted as r. Other consults are c. That split matches the OD: 60% of r went to TG, 84% of c to GT or DP.</li>
+        <li>New consults are pooled across both doctors, since either can take a new referral. Follow-ups, post-ops and urgents are counted for Dr. Dang only, because each doctor keeps her own follow-up patients.</li>
+        <li>Follow-ups with "CAT R/A" are reassessments. Follow-ups marked "TRIAGE" are counted as urgents.</li>
+        <li>The export has no appointment status, so no-shows and cancellations can't be separated from patients seen.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+const CODES=[
+  {k:'r',name:'Consult, cataract/refractive',short:'Cat/refractive consult'},
+  {k:'c',name:'Consult, other',short:'Other consult'},
+  {k:'a',name:'Follow-up',short:'Follow-up'},
+  {k:'po',name:'Post-op',short:'Post-op (wk 1 / mo 1)'},
+  {k:'u',name:'Urgent',short:'Urgent'},
+  {k:'o',name:'Open',short:'Open, release 1–2 wks out'},
+  {k:'L',name:'Laser',short:'Laser (LPI / YAG)'},
+  {k:'l',name:'LDD',short:'LDD'},
+  {k:'P',name:'Pre-consult',short:'Pre-consult'}
+];
+const MIX_KEYS=['r','c','a','po','u','L','o'];
+const CYCLE=['r','c','a','po','u','o','L','l','P',''];
+const ODS=['TG','GT','DP'];
+const DEFAULT_VARIANTS={
+  standard:{name:'Standard',when:'Most months (Feb–Jun, Sep–Nov). Built on the typical clinic: about 70 patients, 21 new.',mix:{r:10,c:14,a:34,po:9,u:6,L:3,o:2}},
+  summer:{name:'Summer',when:'July and August. Fewer clinics run, so each one carries about 82 patients, mostly follow-ups. Urgents drop to 3 to make room.',mix:{r:11,c:13,a:40,po:9,u:3,L:2,o:0}},
+  light:{name:'Light',when:'December and January. About 58 patients per clinic. Release the 15 open slots to the consult backlog, or close them.',mix:{r:7,c:11,a:32,po:5,u:6,L:2,o:15}},
+  push:{name:'Consult push',when:'To reach 30 new patients per clinic. Follow-ups and post-ops give up the room.',mix:{r:13,c:20,a:30,po:7,u:6,L:2,o:0}},
+  twood:{name:'Two-OD',when:'One optometrist is away. Turn that OD off under Clinic hours.',mix:{r:7,c:10,a:23,po:6,u:4,L:2,o:1},ods:{TG:true,GT:true,DP:false}}
+};
+const MONTHS=[{"m": "2025-09", "r_new": 7.4, "r_ra": 4.1, "c_new": 12.6, "a": 27.7, "po": 9.9, "u": 1.1, "laser": 6.1, "new": 20.0, "total": 69.0, "clinics": 7.0, "weeks": 5, "prac_wk": 28.8, "mi_wk": 0.8, "thu_wk": 0.0, "cpw": 1.4}, {"m": "2025-10", "r_new": 7.6, "r_ra": 4.4, "c_new": 10.9, "a": 29.4, "po": 6.8, "u": 1.2, "laser": 2.8, "new": 18.5, "total": 63.0, "clinics": 8.0, "weeks": 5, "prac_wk": 33.4, "mi_wk": 1.6, "thu_wk": 2.2, "cpw": 1.6}, {"m": "2025-11", "r_new": 6.0, "r_ra": 2.9, "c_new": 13.6, "a": 31.7, "po": 7.4, "u": 1.0, "laser": 3.1, "new": 19.6, "total": 65.7, "clinics": 7.0, "weeks": 5, "prac_wk": 31.4, "mi_wk": 0.2, "thu_wk": 3.8, "cpw": 1.4}, {"m": "2025-12", "r_new": 5.8, "r_ra": 1.8, "c_new": 10.8, "a": 34.7, "po": 5.2, "u": 1.5, "laser": 1.7, "new": 16.7, "total": 61.5, "clinics": 6.0, "weeks": 4, "prac_wk": 30.2, "mi_wk": 1.0, "thu_wk": 4.0, "cpw": 1.5}, {"m": "2026-01", "r_new": 5.0, "r_ra": 1.8, "c_new": 11.0, "a": 30.0, "po": 4.4, "u": 1.0, "laser": 2.5, "new": 16.0, "total": 55.6, "clinics": 8.0, "weeks": 4, "prac_wk": 39.0, "mi_wk": 1.2, "thu_wk": 5.8, "cpw": 2.0}, {"m": "2026-02", "r_new": 4.6, "r_ra": 4.1, "c_new": 14.7, "a": 31.9, "po": 5.4, "u": 2.0, "laser": 3.3, "new": 19.3, "total": 66.0, "clinics": 7.0, "weeks": 4, "prac_wk": 48.2, "mi_wk": 9.5, "thu_wk": 5.0, "cpw": 1.75}, {"m": "2026-03", "r_new": 6.7, "r_ra": 2.9, "c_new": 13.3, "a": 36.3, "po": 6.9, "u": 1.3, "laser": 3.9, "new": 20.0, "total": 71.1, "clinics": 7.0, "weeks": 5, "prac_wk": 36.2, "mi_wk": 3.8, "thu_wk": 4.4, "cpw": 1.4}, {"m": "2026-04", "r_new": 8.8, "r_ra": 2.5, "c_new": 13.9, "a": 33.1, "po": 8.2, "u": 2.0, "laser": 4.0, "new": 22.6, "total": 72.5, "clinics": 8.0, "weeks": 5, "prac_wk": 46.0, "mi_wk": 3.6, "thu_wk": 6.2, "cpw": 1.6}, {"m": "2026-05", "r_new": 7.9, "r_ra": 2.3, "c_new": 13.1, "a": 32.3, "po": 9.0, "u": 1.4, "laser": 2.3, "new": 21.0, "total": 68.3, "clinics": 7.0, "weeks": 5, "prac_wk": 43.8, "mi_wk": 10.6, "thu_wk": 3.8, "cpw": 1.4}, {"m": "2026-06", "r_new": 8.2, "r_ra": 1.9, "c_new": 14.4, "a": 35.2, "po": 10.4, "u": 1.6, "laser": 2.9, "new": 22.6, "total": 74.6, "clinics": 8.0, "weeks": 5, "prac_wk": 50.4, "mi_wk": 8.0, "thu_wk": 6.2, "cpw": 1.6}, {"m": "2026-07", "r_new": 10.2, "r_ra": 2.0, "c_new": 13.8, "a": 41.8, "po": 9.0, "u": 1.8, "laser": 3.8, "new": 24.0, "total": 82.5, "clinics": 6.0, "weeks": 5, "prac_wk": 46.2, "mi_wk": 11.6, "thu_wk": 5.8, "cpw": 1.2}, {"m": "2026-08", "r_new": 8.8, "r_ra": 2.0, "c_new": 12.2, "a": 43.3, "po": 9.3, "u": 1.8, "laser": 3.5, "new": 21.0, "total": 81.0, "clinics": 6.0, "weeks": 5, "prac_wk": 32.6, "mi_wk": 5.0, "thu_wk": 2.4, "cpw": 1.2}, {"m": "2026-09", "r_new": 7.0, "r_ra": 1.5, "c_new": 13.1, "a": 38.4, "po": 7.4, "u": 1.2, "laser": 5.1, "new": 20.1, "total": 73.8, "clinics": 8.0, "weeks": 5, "prac_wk": 47.4, "mi_wk": 9.2, "thu_wk": 6.0, "cpw": 1.6}];
+const DEFAULT_SETTINGS={amStart:'08:00',amEnd:'12:20',pmStart:'13:10',pmEnd:'15:10',lead:20,ods:{TG:true,GT:true,DP:true},rTG:false};
+const DEFAULT_NEED={cpw:1.5,ra:4,prac:44,mi:8,thu:5,a:51,po:11,u:2,L:5};
+const KEY='nd-template-builder-v3';
+
+let state=load()||fresh();
+function freshFree2(){return{view:{start:'07:40',end:'15:15',lunchA:'12:25',lunchB:'13:10'},lead:20,autoPair:true,brush:'a',lenBy:{},blocks:[],nid:1,sel:null,openId:null,dirty:false}}
+function fresh(){return{tab:'trends',settings:clone(DEFAULT_SETTINGS),variants:clone(DEFAULT_VARIANTS),edits:{},need:clone(DEFAULT_NEED),free2:freshFree2(),saved:[]}}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function load(){try{const s=localStorage.getItem(KEY);if(!s)return null;const o=JSON.parse(s);if(!o||!o.variants||!o.settings)return null;o.edits=o.edits||{};o.need=Object.assign(clone(DEFAULT_NEED),o.need||{});o.free2=(o.free2&&Array.isArray(o.free2.blocks)&&o.free2.view)?Object.assign(freshFree2(),o.free2):freshFree2();o.saved=Array.isArray(o.saved)?o.saved:[];return o}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+
+const toMin=s=>{const[h,m]=s.split(':').map(Number);return h*60+m};
+const fmt=m=>{let h=Math.floor(m/60),mm=m%60;const ap=h>=12?'pm':'am';h=h%12||12;return h+':'+String(mm).padStart(2,'0')};
+const fmt24=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+
+function odsFor(vid){const v=state.variants[vid];const base=state.settings.ods;return v&&v.ods?Object.assign({},base,v.ods):base}
+
+// Dr. Dang slots: every 5 min in each block; slot i in a block belongs to OD i%3 (fixed stagger).
+function slotsWith(s,ods){
+  const out=[];
+  const blocks=[[toMin(s.amStart),toMin(s.amEnd),'am'],[toMin(s.pmStart),toMin(s.pmEnd),'pm']];
+  for(const[a,b,blk] of blocks){let i=0;for(let t=a;t<=b;t+=5,i++){const od=ODS[i%3];if(ods[od])out.push({t,od,blk})}}
+  return out;
+}
+function slotsFor(vid){return slotsWith(state.settings,odsFor(vid))}
+
+function spread(n,counts){ // even interleave of codes across n positions
+  const res=new Array(n).fill('');const placed={};const keys=Object.keys(counts).filter(k=>counts[k]>0);
+  keys.forEach(k=>placed[k]=0);
+  const total=keys.reduce((s,k)=>s+counts[k],0);
+  const blanks=Math.max(0,n-total);
+  const all=Object.assign({},counts);if(blanks)all['']=blanks;placed['']=0;
+  const ks=Object.keys(all).filter(k=>all[k]>0);
+  for(let i=0;i<n;i++){let best=null,bd=-1e9;for(const k of ks){if(placed[k]>=all[k])continue;const d=all[k]*(i+1)/n-placed[k];if(d>bd+1e-9){bd=d;best=k}}
+    if(best===null)break;res[i]=best;placed[best]++}
+  return res;
+}
+
+function generate(vid){
+  const v=state.variants[vid],mix=v.mix,slots=slotsFor(vid);
+  const code=new Array(slots.length).fill('');
+  const am=[],pm=[];slots.forEach((s,i)=>(s.blk==='am'?am:pm).push(i));
+  const nAll=slots.length||1;
+  const poAM=Math.round((mix.po||0)*am.length/nAll),poPM=Math.max(0,(mix.po||0)-poAM);
+  const uAM=Math.ceil((mix.u||0)/2),uPM=Math.max(0,(mix.u||0)-uAM);
+  const mid=[];
+  [[am,poAM,uAM],[pm,poPM,uPM]].forEach(([idx,p,u])=>{
+    const pp=Math.min(p,idx.length),uu=Math.min(u,idx.length-pp);
+    idx.slice(0,pp).forEach(i=>code[i]='po');
+    idx.slice(idx.length-uu).forEach(i=>code[i]='u');
+    idx.slice(pp,idx.length-uu).forEach(i=>mid.push(i));
+  });
+  let rest={r:mix.r||0,c:mix.c||0,a:mix.a||0,L:mix.L||0,o:mix.o||0};
+  let pool=mid;
+  if(state.settings.rTG&&rest.r>0){
+    const tg=mid.filter(i=>slots[i].od==='TG');
+    const put=spread(tg.length,{r:Math.min(rest.r,tg.length)});
+    tg.forEach((i,j)=>{if(put[j]==='r')code[i]='r'});
+    rest.r=0;pool=mid.filter(i=>code[i]==='');
+  }
+  const fill=spread(pool.length,rest);
+  pool.forEach((i,j)=>code[i]=fill[j]);
+  const ed=state.edits[vid]||{};
+  return slots.map((s,i)=>{const e=ed[s.t];const c=(e!==undefined)?e:code[i];return Object.assign({},s,{code:c,base:code[i],edited:e!==undefined&&e!==code[i]})});
+}
+
+function countGrid(g){const c={};g.forEach(s=>{if(s.code)c[s.code]=(c[s.code]||0)+1});return c}
+
+/* ---------- render ---------- */
+const $=id=>document.getElementById(id);
+function chip(k,label){const sp=document.createElement('span');sp.className='chip k-'+(k||'o');sp.textContent=label!==undefined?label:(k||'·');return sp}
+
+function renderTabs(){
+  const t=$('tabs');t.innerHTML='';
+  const items=[['trends','Trends']].concat(Object.keys(state.variants).map(id=>[id,state.variants[id].name]),[['free','Free build'],['compare','Compare']]);
+  items.forEach(([id,name])=>{const b=document.createElement('button');b.className='tab';b.type='button';b.role='tab';b.textContent=name;b.setAttribute('aria-selected',String(state.tab===id));b.onclick=()=>{state.tab=id;save();render()};t.appendChild(b)});
+}
+
+function renderLegend(){
+  ['legend'].forEach(id=>{
+    const l=$(id);l.innerHTML='';
+    CODES.concat([{k:'',name:'Clear'}]).forEach(c=>{
+      const s=document.createElement('span');s.className='palchip';
+      s.title='Drag onto a slot to set it to '+c.name;
+      s.appendChild(chip(c.k,c.k||'·'));s.appendChild(document.createTextNode(c.name));
+      s.addEventListener('pointerdown',e=>startDrag(e,{type:'pal',code:c.k,label:c.name}));
+      l.appendChild(s)});
+  });
+}
+
+/* ---------- drag to move / assign ---------- */
+let drag=null;
+function startDrag(e,src){
+  if(e.button!==undefined&&e.button!==0)return;
+  e.preventDefault();
+  const ghost=document.createElement('div');ghost.className='ghost';
+  ghost.appendChild(chip(src.code,src.code||'·'));
+  const lab=document.createElement('span');lab.textContent=src.type==='slot'?'Move to…':src.label;ghost.appendChild(lab);
+  document.body.appendChild(ghost);document.body.classList.add('dragging');
+  drag={src,ghost,target:null};
+  if(src.td)src.td.classList.add('dragsrc');
+  moveDrag(e);
+  document.addEventListener('pointermove',moveDrag);
+  document.addEventListener('pointerup',endDrag);
+  document.addEventListener('pointercancel',cancelDrag);
+  document.addEventListener('keydown',escDrag);
+}
+function moveDrag(e){
+  if(!drag)return;
+  drag.ghost.style.transform='translate('+(e.clientX+14)+'px,'+(e.clientY+14)+'px)';
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const td=el&&el.closest?el.closest('td[data-t]'):null;
+  const ok=td&&(drag.src.type==='pal'||td.closest('.gridwrap')===drag.src.tb);
+  const next=ok&&td!==drag.src.td?td:null;
+  if(drag.target!==next){if(drag.target)drag.target.classList.remove('drop');if(next)next.classList.add('drop');drag.target=next}
+  if(e.clientY<60)window.scrollBy(0,-14);else if(e.clientY>innerHeight-60)window.scrollBy(0,14);
+}
+function finishDrag(){
+  if(!drag)return;
+  drag.ghost.remove();document.body.classList.remove('dragging');
+  if(drag.target)drag.target.classList.remove('drop');
+  if(drag.src.td)drag.src.td.classList.remove('dragsrc');
+  document.removeEventListener('pointermove',moveDrag);
+  document.removeEventListener('pointerup',endDrag);
+  document.removeEventListener('pointercancel',cancelDrag);
+  document.removeEventListener('keydown',escDrag);
+}
+function endDrag(){
+  if(!drag)return;
+  const {src,target}=drag;finishDrag();drag=null;
+  if(!target)return;
+  const ctx=target.closest('.gridwrap')._ctx,t=+target.dataset.t;
+  if(src.type==='pal'){ctx.put(t,src.code)}
+  else{const a=src.t,b=t,ca=ctx.codeAt(a),cb=ctx.codeAt(b);ctx.put(a,cb);ctx.put(b,ca)}
+  save();render();
+}
+function cancelDrag(){finishDrag();drag=null}
+function escDrag(e){if(e.key==='Escape')cancelDrag()}
+
+function renderMix(vid,g){
+  const v=state.variants[vid],mix=v.mix;
+  $('vname').textContent=v.name;$('vwhen').textContent=v.when;
+  const cap=g.length,planned=MIX_KEYS.reduce((s,k)=>s+(+mix[k]||0),0);
+  $('capUsed').textContent=planned;$('capTot').textContent=cap;
+  const st=$('capStatus');
+  if(planned===cap){st.className='status st-ok';st.textContent='Fully booked'}
+  else if(planned<cap){st.className='status st-warn';st.textContent=(cap-planned)+' empty'}
+  else{st.className='status st-bad';st.textContent=(planned-cap)+' over'}
+  const bar=$('capBar');bar.innerHTML='';
+  const denom=Math.max(cap,planned)||1;
+  MIX_KEYS.forEach(k=>{const n=+mix[k]||0;if(!n)return;const s=document.createElement('span');s.style.width=(n/denom*100)+'%';s.style.background=k==='o'?'var(--line)':'var(--c-'+k+')';s.title=k+': '+n;bar.appendChild(s)});
+  const m=$('mix');m.innerHTML='';
+  MIX_KEYS.forEach(k=>{
+    const info=CODES.find(c=>c.k===k);
+    const row=document.createElement('div');row.className='mrow';
+    row.appendChild(chip(k));
+    const lb=document.createElement('div');lb.className='lbl';lb.textContent=info.short;row.appendChild(lb);
+    const st=document.createElement('div');st.className='step';
+    const minus=document.createElement('button');minus.type='button';minus.textContent='−';minus.setAttribute('aria-label','Fewer '+info.name);
+    const inp=document.createElement('input');inp.type='number';inp.min=0;inp.max=120;inp.value=mix[k]||0;inp.id='mix-'+k;inp.setAttribute('aria-label',info.name+' slots');
+    const plus=document.createElement('button');plus.type='button';plus.textContent='+';plus.setAttribute('aria-label','More '+info.name);
+    const set=n=>{mix[k]=Math.max(0,Math.min(120,n|0));save();render()};
+    minus.onclick=()=>set((mix[k]||0)-1);plus.onclick=()=>set((mix[k]||0)+1);
+    inp.onchange=()=>set(+inp.value);
+    st.append(minus,inp,plus);row.appendChild(st);m.appendChild(row);
+  });
+}
+
+function renderSettings(vid){
+  const s=state.settings;
+  ['amStart','amEnd','pmStart','pmEnd'].forEach(k=>{$(k).value=s[k]});
+  $('lead').value=s.lead;$('rTG').checked=!!s.rTG;
+  ['leadA','leadB','leadC'].forEach(id=>$(id).textContent=s.lead);
+  const lunch=toMin(s.pmStart)-toMin(s.amEnd)-5;
+  const amN=(toMin(s.amEnd)-toMin(s.amStart))/5+1,pmN=(toMin(s.pmEnd)-toMin(s.pmStart))/5+1;
+  $('derived').innerHTML='Lunch <b>'+fmt(toMin(s.amEnd)+5)+'–'+fmt(toMin(s.pmStart))+'</b> ('+lunch+' min) · <b>'+(amN+pmN)+'</b> Dr. Dang slots with 3 ODs · OD lunch '+fmt(toMin(s.amEnd)-s.lead+5)+'–'+fmt(toMin(s.pmStart)-s.lead);
+  const box=$('odToggles');box.innerHTML='';
+  const v=state.variants[vid];const ods=odsFor(vid);
+  ODS.forEach(od=>{
+    const lab=document.createElement('label');lab.className='tog';
+    const cb=document.createElement('input');cb.type='checkbox';cb.id='od-'+od;cb.checked=!!ods[od];
+    cb.onchange=()=>{if(v.ods){v.ods[od]=cb.checked}else{state.settings.ods[od]=cb.checked}save();render()};
+    lab.append(cb,document.createTextNode(od));box.appendChild(lab);
+  });
+}
+
+function haveRows(g){
+  const c=countGrid(g),n=state.need,cpw=+n.cpw||0;
+  const ra=+n.ra||0;
+  const newHave=Math.round(((c.r||0)+(c.c||0))*cpw-ra);
+  return[
+    ['New consults (Mon/Wed)','newPts',newHave],
+    ['Follow-ups (a)','a',Math.round((c.a||0)*cpw)],
+    ['Post-ops (po)','po',Math.round((c.po||0)*cpw)],
+    ['Urgents (u)','u',Math.round((c.u||0)*cpw)],
+    ['Laser (L)','L',Math.round((c.L||0)*cpw)],
+    ['Open (o), flex','',Math.round((c.o||0)*cpw)]
+  ];
+}
+function statusOf(need,have){if(!need)return null;const r=have/need;if(r<0.95)return['st-bad','Short '+(need-have)];if(r>1.15)return['st-warn','+'+(have-need)+' spare'];return['st-ok','Covered']}
+
+function renderNeed(g){
+  const n=state.need;$('cpw').value=n.cpw;$('raw').value=n.ra;$('prac').value=n.prac;$('mi').value=n.mi;$('thu').value=n.thu;
+  n.newPts=Math.max(0,(+n.prac||0)-(+n.mi||0)-(+n.thu||0));
+  $('ndNeed').innerHTML='Dr. Dang\'s Mon/Wed clinics need <b>'+n.newPts+'</b> new consults a week, about <b>'+(n.newPts/(+n.cpw||1)).toFixed(1)+'</b> per clinic. Follow-ups below are Dr. Dang\'s own patients only.';
+  const body=$('needBody');body.innerHTML='';
+  haveRows(g).forEach(([label,key,have])=>{
+    const tr=document.createElement('tr');
+    const td0=document.createElement('td');td0.textContent=label;tr.appendChild(td0);
+    const td1=document.createElement('td');
+    if(key==='newPts'){td1.textContent=n.newPts}else if(key){const i=document.createElement('input');i.type='number';i.min=0;i.id='need-'+key;i.value=n[key];i.setAttribute('aria-label','Weekly need, '+label);i.onchange=()=>{n[key]=Math.max(0,+i.value||0);save();render()};td1.appendChild(i)}else td1.textContent='—';
+    tr.appendChild(td1);
+    const td2=document.createElement('td');td2.textContent=have;tr.appendChild(td2);
+    const td3=document.createElement('td');const st=key?statusOf(+n[key],have):null;
+    if(st){const s=document.createElement('span');s.className='status '+st[0];s.textContent=st[1];td3.appendChild(s)}
+    tr.appendChild(td3);body.appendChild(tr);
+  });
+}
+
+const PICK_OPTS=[['','Empty']].concat(CODES.map(c=>[c.k,c.k+' · '+c.name]));
+let lastK=0;
+function colCount(box){return Math.max(1,Math.min(4,Math.floor((box.clientWidth||900)/208)))}
+function renderGrid(box,g,s,ods,ctx){
+  const lead=+s.lead||20;
+  const byT={};g.forEach(x=>byT[x.t]=x);
+  const t0=toMin(s.amStart)-lead,t1=toMin(s.pmEnd);
+  const lunchA=toMin(s.amEnd)+5,lunchB=toMin(s.pmStart);
+  box.innerHTML='';box._ctx=ctx;box.classList.add('gridwrap');
+  // 1) describe every row
+  const rows=[];let lunchDone=false;
+  for(let t=t0;t<=t1;t+=5){
+    const ndInLunch=t>=lunchA&&t<lunchB;
+    const odSlot=byT[t+lead];
+    const isOdLunch=!odSlot&&(t+lead)>=lunchA&&(t+lead)<lunchB;
+    if(ndInLunch&&isOdLunch){if(!lunchDone){rows.push({lunch:true});lunchDone=true}continue}
+    rows.push({t,ndInLunch,slot:byT[t],odSlot});
+  }
+  // 2) split into side-by-side columns so the whole template fits on screen
+  const K=colCount(box);lastK=K;
+  const per=Math.ceil(rows.length/K);
+  const cols=document.createElement('div');cols.className='gridcols';
+  for(let k=0;k<K;k++){
+    const chunk=rows.slice(k*per,(k+1)*per);if(!chunk.length)continue;
+    const tb=document.createElement('table');tb.className='grid';
+    const thead=document.createElement('thead');const hr=document.createElement('tr');
+    [['Time',''],['Dr. Dang','ND'],['TG','OD'],['GT','OD'],['DP','OD']].forEach(([a,b],i)=>{const th=document.createElement('th');th.textContent=a;if(b){const sm=document.createElement('small');sm.textContent=(i>1&&!ods[a])?'off':b;th.appendChild(sm)}hr.appendChild(th)});
+    thead.appendChild(hr);tb.appendChild(thead);
+    const body=document.createElement('tbody');
+    chunk.forEach(r=>{
+      if(r.lunch){const tr=document.createElement('tr');tr.className='lunch';const td=document.createElement('td');td.colSpan=5;td.innerHTML='<span class="lunchlbl">Lunch · Dr. Dang '+fmt(lunchA)+'–'+fmt(lunchB)+'</span>';tr.appendChild(td);body.appendChild(tr);return}
+      const {t,ndInLunch,slot,odSlot}=r;
+      const tr=document.createElement('tr');if(t%60===0)tr.className='hour';if(ndInLunch)tr.classList.add('lunch');
+      const tt=document.createElement('td');tt.className='t';tt.textContent=fmt(t);tr.appendChild(tt);
+      const ndTd=document.createElement('td');
+      if(slot){
+        ndTd.dataset.t=t;ndTd.className='ndcell';
+        const wrap=document.createElement('span');wrap.className='slot';
+        const grip=document.createElement('span');grip.className='grip'+(slot.code?'':' dim');grip.textContent='⠿';
+        grip.title='Drag to swap with another slot';grip.setAttribute('aria-hidden','true');
+        grip.addEventListener('pointerdown',e=>startDrag(e,{type:'slot',tb:box,td:ndTd,t,code:slot.code}));
+        const pw=document.createElement('span');pw.className='pickwrap'+(slot.code?'':' empty')+(slot.edited?' edited':'');
+        pw.appendChild(chip(slot.code,slot.code||'+'));
+        const sel=document.createElement('select');
+        sel.setAttribute('aria-label',fmt(t)+' Dr. Dang, with '+slot.od+', currently '+(slot.code||'empty')+'. Change appointment type.');
+        PICK_OPTS.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;if(v===slot.code)o.selected=true;sel.appendChild(o)});
+        sel.onchange=()=>{ctx.put(t,sel.value);save();render()};
+        pw.appendChild(sel);wrap.append(grip,pw);ndTd.appendChild(wrap);
+      } else if(ndInLunch){ndTd.innerHTML='<span class="lunchlbl">Lunch</span>'}
+      tr.appendChild(ndTd);
+      ODS.forEach(od=>{const td=document.createElement('td');td.className='od';
+        if(!ods[od])td.classList.add('offd');
+        else if(odSlot&&odSlot.od===od&&odSlot.code&&odSlot.code!=='L'){td.appendChild(chip(odSlot.code));td.title='Sees Dr. Dang at '+fmt(t+lead)}
+        tr.appendChild(td)});
+      body.appendChild(tr);
+    });
+    tb.appendChild(body);cols.appendChild(tb);
+  }
+  box.appendChild(cols);
+  const c=countGrid(g);const per2={TG:0,GT:0,DP:0};g.forEach(x=>{if(x.code&&x.code!=='L')per2[x.od]++});
+  const total=Object.values(c).reduce((a,b)=>a+b,0);
+  const tot=document.createElement('div');tot.className='gridtotals';
+  tot.innerHTML='<b>'+total+' patients</b>'+ODS.filter(o=>ods[o]).map(o=>'<span>'+o+' <b>'+per2[o]+'</b></span>').join('');
+  box.appendChild(tot);
+}
+
+function renderCompare(){
+  const ids=Object.keys(state.variants);const grids=ids.map(id=>generate(id));const counts=grids.map(countGrid);
+  const t=$('cmpTable');t.innerHTML='';
+  const th=document.createElement('thead');const hr=document.createElement('tr');
+  hr.innerHTML='<th>Per clinic</th>'+ids.map(id=>'<th>'+state.variants[id].name+'</th>').join('');th.appendChild(hr);t.appendChild(th);
+  const tb=document.createElement('tbody');
+  const raPer=(+state.need.ra||0)/(+state.need.cpw||1);
+  const row=(label,fn,cls)=>{const tr=document.createElement('tr');if(cls)tr.className=cls;const h=document.createElement('th');h.textContent=label;tr.appendChild(h);ids.forEach((id,i)=>{const td=document.createElement('td');td.textContent=fn(i);tr.appendChild(td)});tb.appendChild(tr)};
+  CODES.forEach(cd=>{if(counts.some(c=>c[cd.k]))row(cd.k+' · '+cd.name,i=>counts[i][cd.k]||0)});
+  row('Total patients',i=>Object.values(counts[i]).reduce((a,b)=>a+b,0),'sum');
+  row('New patients',i=>Math.round((counts[i].r||0)+(counts[i].c||0)-raPer));
+  row('Dr. Dang slots',i=>grids[i].length);
+  row('ODs working',i=>ODS.filter(o=>odsFor(ids[i])[o]).join(', '));
+  t.appendChild(tb);
+}
+
+
+function suggest(m){return m.total>=78?'summer':m.total<62?'light':'standard'}
+const MNAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const mlabel=m=>{const[y,mo]=m.split('-');return MNAMES[+mo-1]+' '+y.slice(2)};
+function renderTrends(){
+  const F=$('findings');F.innerHTML='';
+  [['69','patients per clinic','Average Dr. Dang Mon/Wed clinic. Middle 80% of clinics: 59 to 81. The template books 76.'],
+   ['44','new consults a week, practice-wide','Up from 32 before February. Dr. Iizuka now sees about 8 and Dr. Dang\'s Thursday about 5, so each Mon/Wed clinic carries about 21.'],
+   ['34','follow-ups','The template has 29. Follow-ups climb to 42 in July and August and absorb the growth.'],
+   ['7.6 · 1.5','post-ops · urgents','The template holds 13 post-ops and 6 urgents. Laser (LPI, YAG) runs about 3.5 per clinic with no slots of its own.']
+  ].forEach(([n,u,t])=>{const d=document.createElement('div');d.className='find';d.innerHTML='<div class="num">'+n+' <small>'+u+'</small></div><p>'+t+'</p>';F.appendChild(d)});
+  // chart
+  const W=760,H=270,pl=38,pr=96,pt=14,pb=30,ymax=90;
+  const x=i=>pl+i*(W-pl-pr)/(MONTHS.length-1),y=v=>pt+(H-pt-pb)*(1-v/ymax);
+  let g='';
+  [0,20,40,60,80].forEach(v=>{g+='<line class="gridl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'"/><text class="axis" x="'+(pl-8)+'" y="'+(y(v)+4)+'" text-anchor="end">'+v+'</text>'});
+  g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(78)+'" y2="'+y(78)+'" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"/><text class="axis" x="'+(pl+6)+'" y="'+(y(78)-6)+'">78-slot template</text>';
+  MONTHS.forEach((m,i)=>{if(i%2===0||i===MONTHS.length-1)g+='<text class="axis" x="'+x(i)+'" y="'+(H-8)+'" text-anchor="middle">'+mlabel(m.m)+'</text>'});
+  const line=(k,col,lab)=>{const pts=MONTHS.map((m,i)=>x(i)+','+y(m[k])).join(' ');let o='<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    MONTHS.forEach((m,i)=>{o+='<circle cx="'+x(i)+'" cy="'+y(m[k])+'" r="4" fill="'+col+'" stroke="var(--panel)" stroke-width="2"/>'});
+    const L=MONTHS[MONTHS.length-1];o+='<text class="lab" x="'+(x(MONTHS.length-1)+10)+'" y="'+(y(L[k])+4)+'">'+lab+' '+L[k]+'</text>';return o};
+  g+=line('total','var(--s1)','All')+line('new','var(--s2)','New');
+  const cw=(W-pl-pr)/(MONTHS.length-1);
+  MONTHS.forEach((m,i)=>{g+='<rect class="hit" data-i="'+i+'" x="'+(x(i)-cw/2)+'" y="'+pt+'" width="'+cw+'" height="'+(H-pt-pb)+'"/>'});
+  g+='<line id="xh" y1="'+pt+'" y2="'+(H-pb)+'" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>';
+  const C=$('chart');C.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Patients per clinic by month, all and new">'+g+'</svg><div class="tip" id="tip" hidden></div>';
+  const svg=C.querySelector('svg'),tip=$('tip'),xh=C.querySelector('#xh');
+  svg.querySelectorAll('.hit').forEach(r=>{
+    r.addEventListener('mouseenter',()=>{const i=+r.dataset.i,m=MONTHS[i];xh.setAttribute('x1',x(i));xh.setAttribute('x2',x(i));xh.setAttribute('visibility','visible');
+      tip.innerHTML='<b>'+mlabel(m.m)+'</b> · '+m.clinics+' clinics<br><span class="sw" style="background:var(--s1)"></span>All '+m.total+'<br><span class="sw" style="background:var(--s2)"></span>New '+m.new+'<br>Follow-ups '+m.a+' · Post-ops '+m.po;
+      tip.hidden=false;const bb=svg.getBoundingClientRect(),sc=bb.width/W;let left=x(i)*sc+12;if(left>bb.width-170)left=x(i)*sc-170;tip.style.left=left+'px';tip.style.top='10px'});
+    r.addEventListener('mouseleave',()=>{tip.hidden=true;xh.setAttribute('visibility','hidden')});
+  });
+  // table
+  const T=$('monthTable');
+  const cols=[['Month',m=>mlabel(m.m)],['Clinics',m=>m.clinics],['All',m=>m.total],['New',m=>m.new],['Practice new / wk',m=>m.prac_wk],['MI new / wk',m=>m.mi_wk],['r new',m=>m.r_new],['Cat R/A',m=>m.r_ra],['c',m=>m.c_new],['a',m=>m.a],['po',m=>m.po],['u',m=>m.u],['Laser',m=>m.laser]];
+  let h='<thead><tr>'+cols.map(c=>'<th>'+c[0]+'</th>').join('')+'<th>Suggested</th><th></th></tr></thead><tbody>';
+  MONTHS.forEach((m,i)=>{const sv=suggest(m);h+='<tr>'+cols.map((c,j)=>'<td'+(j===2?' class="hi"':'')+'>'+c[1](m)+'</td>').join('')+'<td><span class="vtag">'+state.variants[sv].name+'</span></td><td><button class="btn sm" type="button" data-fit="'+i+'">Check fit</button></td></tr>'});
+  T.innerHTML=h+'</tbody>';
+  T.querySelectorAll('[data-fit]').forEach(b=>b.onclick=()=>{const m=MONTHS[+b.dataset.fit],cpw=m.cpw;
+    Object.assign(state.need,{cpw:cpw,prac:Math.round(m.prac_wk),mi:Math.round(m.mi_wk),thu:Math.round(m.thu_wk),ra:Math.round(m.r_ra*cpw),a:Math.round(m.a*cpw),po:Math.round(m.po*cpw),u:Math.round(m.u*cpw),L:Math.round(m.laser*cpw)});
+    state.tab=suggest(m);save();render();window.scrollTo(0,0);toast(mlabel(m.m)+' demand loaded into weekly need')});
+}
+
+/* ---------- free build: independent blocks ---------- */
+const LANES=['ND','TG','GT','DP'];
+const LANE_NAME={ND:'Dr. Dang',TG:'TG',GT:'GT',DP:'DP'};
+const ROW_H=20;
+const F=()=>state.free2;
+let fhist=[],lastFK=0,justDragged=false,confirmFor=null,fdrag=null;
+const snap5=m=>Math.round(m/5)*5;
+const lenOf=code=>Math.max(5,Math.min(120,snap5(+F().lenBy[code]||5)));
+const viewR=()=>{const v=F().view;const vs=toMin(v.start),ve=Math.max(vs+5,toMin(v.end)+5);return[vs,ve]};
+function fsnap(){fhist.push(JSON.stringify(F().blocks));if(fhist.length>60)fhist.shift()}
+function fdirty(){F().dirty=true;save();render()}
+function fundo(){if(!fhist.length){toast('Nothing to undo');return}const f=F();f.blocks=JSON.parse(fhist.pop());if(f.sel&&!f.blocks.some(b=>b.id===f.sel))f.sel=null;fdirty()}
+function byId(id){return F().blocks.find(b=>b.id===id)}
+function newBlock(who,t,code,len){const f=F();const b={id:f.nid++,who,t,len:len||lenOf(code),code,pair:null};f.blocks.push(b);return b}
+function placeBlock(who,t,code){
+  const f=F(),[vs,ve]=viewR();
+  if(code==='L'&&who!=='ND'){toast('Laser goes on Dr. Dang only');return null}
+  const len=lenOf(code);
+  t=Math.max(vs,Math.min(ve-5,snap5(t)));
+  const b=newBlock(who,t,code,len);
+  if(who!=='ND'&&f.autoPair){
+    const tm=t+(+f.lead||0);
+    if(tm>=vs&&tm<=ve-5){const m=newBlock('ND',tm,code,len);b.pair=m.id;m.pair=b.id}
+    else toast('The Dr. Dang visit would fall outside the hours shown, so only the OD visit was added');
+  }
+  return b;
+}
+function findConflicts(){
+  const bad=new Set();
+  LANES.forEach(l=>{const a=F().blocks.filter(b=>b.who===l).sort((x,y)=>x.t-y.t);
+    for(let i=1;i<a.length;i++){for(let j=i-1;j>=0;j--){if(a[j].t+a[j].len>a[i].t){bad.add(a[i].id);bad.add(a[j].id)}else if(a[j].t+a[j].len<=a[i].t&&a[i].t-a[j].t>130)break}}});
+  return bad;
+}
+const freeColCount=()=>Math.max(1,Math.min(4,Math.floor(($('fbands').clientWidth||900)/228)));
+
+function renderFreeBands(){
+  const f=F(),box=$('fbands');box.innerHTML='';
+  const [vs,ve]=viewR(),R=(ve-vs)/5,K=freeColCount();lastFK=K;
+  const per=Math.ceil(R/K),lead=+f.lead||0;
+  const lunchA=toMin(f.view.lunchA),lunchB=toMin(f.view.lunchB);
+  const bad=findConflicts();
+  const sel=byId(f.sel),partner=sel&&sel.pair?byId(sel.pair):null;
+  for(let k=0;k<K;k++){
+    const bs=vs+k*per*5;if(bs>=ve)break;
+    const be=bs+per*5,rows=per;
+    const band=document.createElement('div');band.className='fband';
+    const head=document.createElement('div');head.className='fhead';
+    [['Time',''],['Dr. Dang','ND'],['TG','OD'],['GT','OD'],['DP','OD']].forEach(([a,c])=>{const d=document.createElement('div');d.textContent=a;if(c){const sm=document.createElement('small');sm.textContent=c;d.appendChild(sm)}head.appendChild(d)});
+    band.appendChild(head);
+    const body=document.createElement('div');body.className='fbody';
+    const axis=document.createElement('div');axis.className='faxis';
+    for(let i=0;i<rows;i++){const t=bs+i*5;const d=document.createElement('div');d.className='tick'+(t%60===0?' hr':'');d.textContent=t<ve?fmt(t):'';axis.appendChild(d)}
+    body.appendChild(axis);
+    LANES.forEach(l=>{
+      const lane=document.createElement('div');lane.className='lane';lane.dataset.lane=l;lane.dataset.start=bs;lane.style.height=(rows*ROW_H)+'px';
+      const la=l==='ND'?lunchA:lunchA-lead,lb=l==='ND'?lunchB:lunchB-lead;
+      const x0=Math.max(la,bs),x1=Math.min(lb,be);
+      if(x1>x0){const lb_=document.createElement('div');lb_.className='lunchband';lb_.style.top=((x0-bs)/5*ROW_H)+'px';lb_.style.height=((x1-x0)/5*ROW_H)+'px';lane.appendChild(lb_)}
+      f.blocks.filter(b=>b.who===l&&b.t<be&&b.t+b.len>bs).forEach(b=>{
+        const top=(Math.max(b.t,bs)-bs)/5*ROW_H,bot=(Math.min(b.t+b.len,be)-bs)/5*ROW_H;
+        const el=document.createElement('div');el.className='blk k-'+b.code+(b.id===f.sel?' sel':'')+(partner&&b.id===partner.id?' partner':'')+(bad.has(b.id)?' conf':'');
+        el.dataset.id=b.id;el.style.top=top+'px';el.style.height=(bot-top-1)+'px';
+        const info=CODES.find(c=>c.k===b.code);
+        el.title=LANE_NAME[l]+' · '+fmt(b.t)+'–'+fmt(b.t+b.len)+' · '+(info?info.name:b.code);
+        el.textContent=b.code;
+        if(b.len>5&&b.t>=bs){const sm=document.createElement('small');sm.textContent=b.len+'m';el.appendChild(sm)}
+        lane.appendChild(el);
+      });
+      body.appendChild(lane);
+    });
+    band.appendChild(body);box.appendChild(band);
+  }
+}
+
+function renderFreeRail(){
+  const f=F(),open=state.saved.find(x=>x.id===f.openId);
+  $('fState').innerHTML=open?('Editing <b>'+esc(open.name)+'</b>'+(f.dirty?' · unsaved changes':' · saved')):('Unsaved draft'+(f.blocks.length?' · '+f.blocks.length+' blocks':''));
+  $('fs-save').hidden=!open;
+  if(document.activeElement!==$('fs-name'))$('fs-name').value=open?open.name:($('fs-name').value||'');
+  $('f-lead').value=f.lead;$('f-auto').checked=!!f.autoPair;
+  ['start','end','lunchA','lunchB'].forEach(k=>$('fv-'+k).value=f.view[k]);
+  // palette
+  const pal=$('fPal');pal.innerHTML='';
+  CODES.forEach(c=>{
+    const r=document.createElement('div');r.className='prow'+(f.brush===c.k?' on':'');
+    const ch=chip(c.k);ch.classList.add('palchip');ch.title='Drag into a column';
+    ch.addEventListener('pointerdown',e=>startPalDrag(e,c.k));
+    const nm=document.createElement('div');nm.className='nm';nm.textContent=c.short;
+    const inp=document.createElement('input');inp.type='number';inp.min=5;inp.max=120;inp.step=5;inp.value=lenOf(c.k);inp.id='len-'+c.k;inp.setAttribute('aria-label','Default length in minutes, '+c.name);
+    inp.onclick=e=>e.stopPropagation();
+    inp.onchange=()=>{f.lenBy[c.k]=Math.max(5,Math.min(120,snap5(+inp.value||5)));save();render()};
+    const u=document.createElement('span');u.className='u';u.textContent='min';
+    r.append(ch,nm,inp,u);
+    r.onclick=()=>{f.brush=c.k;save();render()};
+    pal.appendChild(r);
+  });
+  // selected
+  const b=byId(f.sel);
+  $('feFields').hidden=!b;$('feHint').hidden=!!b;
+  if(b){
+    const who=$('fe-who');who.innerHTML='';LANES.forEach(l=>{const o=document.createElement('option');o.value=l;o.textContent=LANE_NAME[l];if(l===b.who)o.selected=true;who.appendChild(o)});
+    const cs=$('fe-code');cs.innerHTML='';CODES.forEach(c=>{if(c.k==='L'&&b.who!=='ND')return;const o=document.createElement('option');o.value=c.k;o.textContent=c.k+' · '+c.name;if(c.k===b.code)o.selected=true;cs.appendChild(o)});
+    $('fe-time').value=fmt24(b.t);$('fe-len').value=b.len;
+    const p=b.pair?byId(b.pair):null;
+    $('feInfo').innerHTML=fmt(b.t)+'–'+fmt(b.t+b.len)+(p?' · paired with <b>'+LANE_NAME[p.who]+' '+fmt(p.t)+'</b>. Moving one does not move the other.':'');
+    $('fe-pair').hidden=!(b.who!=='ND'&&!p);$('fe-unlink').hidden=!p;
+  }
+  // counts
+  const cnt={};f.blocks.forEach(x=>{const k=x.code;cnt[k]=cnt[k]||{nd:0,od:0};if(x.who==='ND')cnt[k].nd++;else cnt[k].od++});
+  let h='<thead><tr><th>Type</th><th>Dr. Dang</th><th>ODs</th></tr></thead><tbody>';
+  let tn=0,to=0;
+  CODES.forEach(c=>{const v=cnt[c.k]||{nd:0,od:0};tn+=v.nd;to+=v.od;h+='<tr><td>'+c.k+' · '+c.name+'</td><td>'+v.nd+'</td><td>'+(c.k==='L'?'—':v.od)+'</td></tr>'});
+  h+='<tr><td><b>Total</b></td><td><b>'+tn+'</b></td><td><b>'+to+'</b></td></tr></tbody>';
+  $('fCounts').innerHTML=h;
+  const per={TG:0,GT:0,DP:0};f.blocks.forEach(x=>{if(x.who!=='ND')per[x.who]++});
+  const bad=findConflicts(),[vs,ve]=viewR(),hidden=f.blocks.filter(x=>x.t<vs||x.t>=ve).length;
+  $('fWarn').innerHTML='Per OD: TG '+per.TG+' · GT '+per.GT+' · DP '+per.DP+(bad.size?'<br><span style="color:var(--bad)">'+bad.size+' blocks overlap in a column (outlined red)</span>':'')+(hidden?'<br>'+hidden+' blocks sit outside the hours shown':'');
+  // saved
+  const sv=$('fSaved');sv.innerHTML='';
+  if(!state.saved.length){const e=document.createElement('p');e.className='nonec';e.textContent='No saved templates yet.';sv.appendChild(e)}
+  state.saved.forEach(t=>{
+    const r=document.createElement('div');r.className='srow'+(t.id===f.openId?' open':'');
+    const info=document.createElement('div');info.innerHTML='<b>'+esc(t.name)+'</b><small>'+t.blocks.length+' blocks · '+new Date(t.saved).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})+'</small>';
+    const bt=document.createElement('div');bt.className='btns';
+    const o=document.createElement('button');o.type='button';o.className='btn sm';
+    const needsOk=f.dirty&&t.id!==f.openId;
+    const cOpen=confirmFor&&confirmFor.kind==='open'&&confirmFor.id===t.id;
+    o.textContent=cOpen?'Discard changes and open':'Open';
+    o.onclick=()=>{if(needsOk&&!cOpen){confirmFor={kind:'open',id:t.id};render();return}confirmFor=null;openSaved(t.id)};
+    const d=document.createElement('button');d.type='button';d.className='btn sm';
+    const cDel=confirmFor&&confirmFor.kind==='del'&&confirmFor.id===t.id;
+    d.textContent=cDel?'Confirm delete':'Delete';if(cDel)d.classList.add('danger');
+    d.onclick=()=>{if(!cDel){confirmFor={kind:'del',id:t.id};render();return}confirmFor=null;state.saved=state.saved.filter(x=>x.id!==t.id);if(f.openId===t.id){f.openId=null;f.dirty=true}save();render();toast('Template deleted')};
+    bt.append(o,d);r.append(info,bt);sv.appendChild(r);
+  });
+}
+function esc(x){return String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderFree(){
+  const keep=$('fSrc').value;$('fSrc').innerHTML='';
+  const o0=document.createElement('option');o0.value='';o0.textContent='Blank grid';$('fSrc').appendChild(o0);
+  Object.keys(state.variants).forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=state.variants[id].name+' variant';$('fSrc').appendChild(o)});
+  $('fSrc').value=keep;renderFreeRail();renderFreeBands();
+}
+function openSaved(id){
+  const t=state.saved.find(x=>x.id===id);if(!t)return;const f=F();
+  f.blocks=clone(t.blocks);f.view=clone(t.view);f.lead=t.lead;f.lenBy=clone(t.lenBy||{});f.autoPair=t.autoPair!==false;
+  f.nid=f.blocks.reduce((m,b)=>Math.max(m,b.id),0)+1;f.sel=null;f.openId=id;f.dirty=false;fhist=[];
+  $('fs-name').value=t.name;save();render();toast('Opened '+t.name);
+}
+function snapshotTemplate(name,id){const f=F();return{id:id||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),name,saved:new Date().toISOString(),blocks:clone(f.blocks),view:clone(f.view),lead:f.lead,lenBy:clone(f.lenBy),autoPair:f.autoPair}}
+function loadVariantIntoFree(id){
+  const f=F(),lead=+state.settings.lead||20;
+  fsnap();f.blocks=[];f.nid=1;
+  generate(id).forEach(x=>{if(!x.code)return;
+    const m=newBlock('ND',x.t,x.code,5);
+    if(x.code!=='L'){const o=newBlock(x.od,x.t-lead,x.code,5);o.pair=m.id;m.pair=o.id}});
+  f.view={start:fmt24(toMin(state.settings.amStart)-lead),end:state.settings.pmEnd,lunchA:fmt24(toMin(state.settings.amEnd)+5),lunchB:state.settings.pmStart};
+  f.lead=lead;f.sel=null;f.openId=null;f.dirty=true;save();render();toast(state.variants[id].name+' variant loaded. Edits here do not change it');
+}
+
+/* placing and moving blocks */
+function laneAt(x,y){const el=document.elementFromPoint(x,y);return el&&el.closest?el.closest('.lane'):null}
+function laneMinutes(lane,y){const r=lane.getBoundingClientRect();return +lane.dataset.start+((y-r.top)/ROW_H)*5}
+function canDrop(b,lane){const w=lane.dataset.lane;return b.who==='ND'?w==='ND':w!=='ND'}
+function showPrev(lane,t,len){
+  document.querySelectorAll('.fprev').forEach(n=>n.remove());
+  if(!lane)return;
+  const bs=+lane.dataset.start,be=bs+Math.round(lane.offsetHeight/ROW_H)*5;
+  const a=Math.max(t,bs),z=Math.min(t+len,be);if(z<=a)return;
+  const d=document.createElement('div');d.className='fprev';d.style.top=((a-bs)/5*ROW_H)+'px';d.style.height=((z-a)/5*ROW_H-1)+'px';lane.appendChild(d);
+}
+function startBlockDrag(e,el){
+  e.preventDefault();
+  const f=F(),b=byId(+el.dataset.id);if(!b)return;
+  const lane0=el.closest('.lane'),bs0=+lane0.dataset.start;
+  const grab=((e.clientY-el.getBoundingClientRect().top)/ROW_H)*5+(Math.max(b.t,bs0)-b.t);
+  fdrag={b,grab,x:e.clientX,y:e.clientY,moved:false,lane:null,t:b.t};
+  document.addEventListener('pointermove',moveBlockDrag);
+  document.addEventListener('pointerup',endBlockDrag);
+  document.addEventListener('pointercancel',cancelBlockDrag);
+  document.addEventListener('keydown',escBlockDrag);
+}
+function moveBlockDrag(e){
+  const d=fdrag;if(!d)return;
+  if(!d.moved){if(Math.hypot(e.clientX-d.x,e.clientY-d.y)<5)return;d.moved=true;document.body.classList.add('dragging')}
+  const lane=laneAt(e.clientX,e.clientY);
+  if(lane&&canDrop(d.b,lane)){
+    const [vs,ve]=viewR();
+    d.lane=lane;d.t=Math.max(vs,Math.min(ve-d.b.len,snap5(laneMinutes(lane,e.clientY)-d.grab)));
+    showPrev(lane,d.t,d.b.len);
+  }else{d.lane=null;showPrev(null)}
+  if(e.clientY<60)window.scrollBy(0,-14);else if(e.clientY>innerHeight-60)window.scrollBy(0,14);
+}
+function stopBlockDrag(){
+  document.removeEventListener('pointermove',moveBlockDrag);
+  document.removeEventListener('pointerup',endBlockDrag);
+  document.removeEventListener('pointercancel',cancelBlockDrag);
+  document.removeEventListener('keydown',escBlockDrag);
+  document.body.classList.remove('dragging');showPrev(null);
+}
+function endBlockDrag(){
+  const d=fdrag;fdrag=null;stopBlockDrag();if(!d)return;
+  const f=F();
+  if(!d.moved){f.sel=d.b.id;save();render();return}
+  justDragged=true;setTimeout(()=>justDragged=false,60);
+  if(d.lane){fsnap();d.b.t=d.t;d.b.who=d.lane.dataset.lane;f.sel=d.b.id;fdirty()}else render();
+}
+function cancelBlockDrag(){fdrag=null;stopBlockDrag()}
+function escBlockDrag(e){if(e.key==='Escape')cancelBlockDrag()}
+
+function startPalDrag(e,code){
+  if(e.button!==undefined&&e.button!==0)return;
+  e.preventDefault();e.stopPropagation();
+  const f=F();f.brush=code;
+  const info=CODES.find(c=>c.k===code);
+  const ghost=document.createElement('div');ghost.className='ghost';ghost.appendChild(chip(code));
+  const lab=document.createElement('span');lab.textContent=info.name;ghost.appendChild(lab);
+  document.body.appendChild(ghost);document.body.classList.add('dragging');
+  const mv=ev=>{
+    ghost.style.transform='translate('+(ev.clientX+14)+'px,'+(ev.clientY+14)+'px)';
+    const lane=laneAt(ev.clientX,ev.clientY);
+    if(lane&&!(code==='L'&&lane.dataset.lane!=='ND'))showPrev(lane,snap5(laneMinutes(lane,ev.clientY)-2.5),lenOf(code));else showPrev(null);
+    if(ev.clientY<60)window.scrollBy(0,-14);else if(ev.clientY>innerHeight-60)window.scrollBy(0,14);
+  };
+  const done=()=>{document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',cancel);document.removeEventListener('keydown',esc);ghost.remove();document.body.classList.remove('dragging');showPrev(null)};
+  const up=ev=>{
+    const lane=laneAt(ev.clientX,ev.clientY);done();
+    if(lane&&state.tab==='free'){fsnap();const b=placeBlock(lane.dataset.lane,snap5(laneMinutes(lane,ev.clientY)-2.5),code);if(b){f.sel=b.id;fdirty()}else{fhist.pop();render()}}
+    else render();
+  };
+  const cancel=()=>done(),esc=ev=>{if(ev.key==='Escape')done()};
+  document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',cancel);document.addEventListener('keydown',esc);
+  mv(e);
+}
+
+/* free build controls */
+$('fbands').addEventListener('pointerdown',e=>{
+  if(e.button!==undefined&&e.button!==0)return;
+  const blk=e.target.closest('.blk');if(blk)startBlockDrag(e,blk);
+});
+$('fbands').addEventListener('click',e=>{
+  if(justDragged||e.target.closest('.blk'))return;
+  const lane=e.target.closest('.lane');if(!lane)return;
+  const f=F();fsnap();
+  const b=placeBlock(lane.dataset.lane,Math.floor(laneMinutes(lane,e.clientY)/5)*5,f.brush);
+  if(b){f.sel=b.id;fdirty()}else{fhist.pop();render()}
+});
+function editSel(fn){const f=F(),b=byId(f.sel);if(!b)return;fsnap();if(fn(b)===false){fhist.pop();render();return}fdirty()}
+$('fe-who').onchange=e=>editSel(b=>{const w=e.target.value;if(b.code==='L'&&w!=='ND'){toast('Laser goes on Dr. Dang only');return false}
+  if((b.who==='ND')!==(w==='ND')&&b.pair){const p=byId(b.pair);if(p)p.pair=null;b.pair=null}b.who=w});
+$('fe-code').onchange=e=>editSel(b=>{if(e.target.value==='L'&&b.who!=='ND'){toast('Laser goes on Dr. Dang only');return false}b.code=e.target.value});
+$('fe-time').onchange=e=>editSel(b=>{if(!e.target.value)return false;const[vs,ve]=viewR();b.t=Math.max(vs,Math.min(ve-b.len,snap5(toMin(e.target.value))))});
+$('fe-len').onchange=e=>editSel(b=>{b.len=Math.max(5,Math.min(120,snap5(+e.target.value||5)))});
+$('fe-pair').onclick=()=>editSel(b=>{const f=F(),tm=b.t+(+f.lead||0),[vs,ve]=viewR();if(tm<vs||tm>ve-5){toast('That time is outside the hours shown');return false}const m=newBlock('ND',tm,b.code,b.len);b.pair=m.id;m.pair=b.id});
+$('fe-unlink').onclick=()=>editSel(b=>{const p=byId(b.pair);if(p)p.pair=null;b.pair=null});
+$('fe-del').onclick=()=>editSel(b=>{const f=F();if(b.pair){const p=byId(b.pair);if(p)p.pair=null}f.blocks=f.blocks.filter(x=>x.id!==b.id);f.sel=null});
+$('f-lead').onchange=e=>{F().lead=Math.max(0,Math.min(120,snap5(+e.target.value||0)));save();render()};
+$('f-auto').onchange=e=>{F().autoPair=e.target.checked;save();render()};
+['start','end','lunchA','lunchB'].forEach(k=>$('fv-'+k).onchange=e=>{if(!e.target.value)return;F().view[k]=e.target.value;F().dirty=true;save();render()});
+$('fClear').onclick=()=>{if(!F().blocks.length){toast('Grid is already empty');return}fsnap();F().blocks=[];F().sel=null;fdirty();toast('Grid cleared. Undo brings it back')};
+$('fUndo').onclick=fundo;
+$('fLoad').onclick=()=>{const id=$('fSrc').value;if(!id){if(F().blocks.length){fsnap();F().blocks=[];F().sel=null;F().openId=null;fdirty()}toast('Blank grid');return}loadVariantIntoFree(id)};
+$('fs-new').onclick=()=>{
+  const name=($('fs-name').value||'').trim()||('Template '+(state.saved.length+1));
+  const t=snapshotTemplate(name);state.saved.unshift(t);const f=F();f.openId=t.id;f.dirty=false;save();render();toast('Saved as '+name)};
+$('fs-save').onclick=()=>{
+  const f=F(),i=state.saved.findIndex(x=>x.id===f.openId);if(i<0)return;
+  const name=($('fs-name').value||'').trim()||state.saved[i].name;
+  state.saved[i]=snapshotTemplate(name,f.openId);f.dirty=false;save();render();toast('Saved changes to '+name)};
+$('fs-export').onclick=()=>{
+  const txt=JSON.stringify({app:'nd-template-builder',templates:state.saved});const fb=$('fExport');
+  const show=()=>{fb.hidden=false;fb.value=txt;fb.focus();fb.select();toast('Select all and copy the text below')};
+  try{navigator.clipboard.writeText(txt).then(()=>{fb.hidden=true;toast('Backup copied')},show)}catch(err){show()}};
+$('fs-import-toggle').onclick=()=>{$('fImportBox').hidden=!$('fImportBox').hidden};
+$('fs-import').onclick=()=>{
+  try{
+    const o=JSON.parse($('fImport').value),arr=Array.isArray(o)?o:(o.templates||[]);let n=0;
+    arr.forEach(t=>{if(t&&Array.isArray(t.blocks)&&t.view&&t.name){state.saved.unshift(Object.assign({},t,{id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),saved:t.saved||new Date().toISOString()}));n++}});
+    save();$('fImport').value='';$('fImportBox').hidden=true;render();toast(n?('Imported '+n+' templates'):'No templates found in that text');
+  }catch(err){toast('That text is not a valid backup')}};
+function freeGridText(){
+  const f=F(),[vs,ve]=viewR();const lines=['Time\tND\tTG\tGT\tDP'];
+  for(let t=vs;t<ve;t+=5){lines.push([fmt24(t)].concat(LANES.map(l=>{let c='';f.blocks.forEach(b=>{if(b.who===l&&t>=b.t&&t<b.t+b.len)c=b.code});return c})).join('\t'))}
+  return lines.join('\n');
+}
+$('fCopy').onclick=()=>{
+  const txt=freeGridText(),fb=$('fFallback');
+  const show=()=>{fb.hidden=false;fb.value=txt;fb.focus();fb.select();toast('Select all and copy the text below')};
+  try{navigator.clipboard.writeText(txt).then(()=>{fb.hidden=true;toast('Copied. Paste into Excel or Sheets')},show)}catch(err){show()}};
+document.addEventListener('keydown',e=>{
+  if(state.tab!=='free')return;
+  const tg=e.target&&e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA')return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();fundo();return}
+  const f=F(),b=byId(f.sel);if(!b)return;
+  if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();$('fe-del').onclick()}
+  else if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();const[vs,ve]=viewR();editSel(x=>{x.t=Math.max(vs,Math.min(ve-x.len,x.t+(e.key==='ArrowUp'?-5:5)))})}
+});
+
+function render(){
+  renderTabs();
+  const isCmp=state.tab==='compare',isTr=state.tab==='trends',isFree=state.tab==='free';
+  $('builder').hidden=isCmp||isTr||isFree;$('compare').hidden=!isCmp;$('trends').hidden=!isTr;$('free').hidden=!isFree;
+  if(isCmp){renderCompare();return}
+  if(isTr){renderTrends();return}
+  if(isFree){renderFree();return}
+  const vid=state.tab in state.variants?state.tab:'standard';
+  const g=generate(vid);
+  const bySlot={};g.forEach(x=>bySlot[x.t]=x);
+  const ctx={
+    codeAt:t=>bySlot[t]?bySlot[t].code:'',
+    put:(t,c)=>{const sl=bySlot[t];if(!sl)return;state.edits[vid]=state.edits[vid]||{};if(c===sl.base)delete state.edits[vid][t];else state.edits[vid][t]=c}
+  };
+  renderMix(vid,g);renderSettings(vid);renderNeed(g);renderGrid($('grid'),g,state.settings,odsFor(vid),ctx);
+}
+
+/* ---------- controls ---------- */
+['amStart','amEnd','pmStart','pmEnd'].forEach(k=>$(k).addEventListener('change',e=>{if(!e.target.value)return;state.settings[k]=e.target.value;save();render()}));
+$('lead').addEventListener('change',e=>{state.settings.lead=Math.max(5,Math.min(60,Math.round((+e.target.value||20)/5)*5));save();render()});
+$('rTG').addEventListener('change',e=>{state.settings.rTG=e.target.checked;save();render()});
+$('cpw').addEventListener('change',e=>{state.need.cpw=Math.max(0.5,+e.target.value||1.5);save();render()});
+['prac','mi','thu'].forEach(k=>$(k).addEventListener('change',e=>{state.need[k]=Math.max(0,+e.target.value||0);save();render()}));
+$('raw').addEventListener('change',e=>{state.need.ra=Math.max(0,+e.target.value||0);save();render()});
+$('fillA').onclick=()=>{const vid=state.tab;const g=slotsFor(vid);const m=state.variants[vid].mix;const planned=MIX_KEYS.reduce((s,k)=>s+(+m[k]||0),0);if(g.length>planned){m.a=(m.a||0)+(g.length-planned);save();render();toast('Added '+(g.length-planned)+' follow-ups')}else toast('No empty slots to fill')};
+$('resetV').onclick=()=>{const vid=state.tab;state.variants[vid]=clone(DEFAULT_VARIANTS[vid]);delete state.edits[vid];save();render();toast('Variant reset')};
+$('clearEdits').onclick=()=>{delete state.edits[state.tab];save();render();toast('Grid edits cleared')};
+function copyGridText(g,s,ods,fb){
+  const lead=+s.lead||20;
+  const byT={};g.forEach(x=>byT[x.t]=x);
+  const t0=toMin(s.amStart)-lead,t1=toMin(s.pmEnd);
+  const lines=['Time\tND\tTG\tGT\tDP'];
+  for(let t=t0;t<=t1;t+=5){const nd=byT[t],od=byT[t+lead];
+    lines.push([fmt24(t),nd?nd.code:'',...ODS.map(o=>ods[o]&&od&&od.od===o&&od.code!=='L'?od.code:'')].join('\t'))}
+  const txt=lines.join('\n');
+  const showFb=()=>{fb.hidden=false;fb.value=txt;fb.focus();fb.select();toast('Select all and copy the text below')};
+  try{navigator.clipboard.writeText(txt).then(()=>{fb.hidden=true;toast('Copied. Paste into Excel or Sheets')},showFb)}catch(e){showFb()}
+}
+$('copyGrid').onclick=()=>{const vid=state.tab;copyGridText(generate(vid),state.settings,odsFor(vid),$('fallback'))};
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
+
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(state.tab==='trends'||state.tab==='compare')return;if(state.tab==='free'){if(freeColCount()!==lastFK)render();return}if(colCount($('grid'))!==lastK)render()},150)});
+renderLegend();render();
+})();
+</script>
